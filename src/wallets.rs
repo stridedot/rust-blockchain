@@ -31,7 +31,7 @@ impl Wallet {
         let pub_key_hash = hash_pub_key(self.public_key.as_slice());
         address.extend_from_slice(pub_key_hash.as_slice());
 
-        let checksum = checksum(pub_key_hash.as_slice());
+        let checksum = checksum(address.as_slice());
         address.extend_from_slice(checksum.as_slice());
 
         // version + pub_key_hash + checksum
@@ -110,7 +110,7 @@ impl Wallets {
     }
 
     fn load_from_file(&mut self) -> Result<()> {
-        let path = env::current_dir()?.join(WALLET_FILE);
+        let path = env::current_dir()?.join("data").join(WALLET_FILE);
         if !path.exists() {
             return Ok(());
         }
@@ -137,7 +137,12 @@ impl Wallets {
     }
 
     fn save_to_file(&self) -> Result<()> {
-        let path = env::current_dir()?.join(WALLET_FILE);
+        let path = env::current_dir()?.join("data");
+        if !path.exists() {
+            std::fs::create_dir_all(&path)?;
+        }
+        let path = path.join(WALLET_FILE);
+
         let file = OpenOptions::new().create(true).write(true).open(&path)?;
         let mut writer = BufWriter::new(file);
 

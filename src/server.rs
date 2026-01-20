@@ -54,11 +54,13 @@ impl Server {
         }
 
         for stream in listener.incoming() {
-            let _blockchain = self.blockchain.clone();
+            let blockchain = self.blockchain.clone();
 
-            thread::spawn(|| match stream {
-                Ok(_stream) => {
-                    println!("success")
+            thread::spawn(move || match stream {
+                Ok(stream) => {
+                    if let Err(e) = serve(&blockchain, stream) {
+                        eprintln!("Error handling connection: {}", e);
+                    }
                 }
                 Err(e) => {
                     println!("error: {}", e)

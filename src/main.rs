@@ -26,15 +26,16 @@ struct Args {
 
 #[derive(Debug, Parser)]
 enum Command {
+    #[command(name = "create-wallet", about = "Create a new wallet")]
+    CreateWallet,
+
     #[command(name = "create-blockchain", about = "Create a new blockchain")]
     CreateBlockchain {
         #[arg(long, help = "The address of the genesis block")]
         address: String,
     },
 
-    #[command(name = "create-wallet", about = "Create a new wallet")]
-    CreateWallet,
-
+    #[command(name = "get-balance", about = "Get the balance of a wallet")]
     GetBalance {
         #[arg(long, help = "The address of the wallet")]
         address: String,
@@ -75,18 +76,18 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     match args.cmd {
+        Command::CreateWallet => {
+            let mut wallets = Wallets::try_new()?;
+            let address = wallets.create_wallet()?;
+            println!("Your new address: {}", address);
+
+            Ok(())
+        }
         Command::CreateBlockchain { address } => {
             let blockchain = Blockchain::create_blockchain(&address)?;
             let utxo_set = UTXOSet::new(blockchain);
             utxo_set.reindex()?;
             println!("Done!");
-
-            Ok(())
-        }
-        Command::CreateWallet => {
-            let mut wallets = Wallets::try_new()?;
-            let address = wallets.create_wallet()?;
-            println!("Your new address: {}", address);
 
             Ok(())
         }
@@ -196,7 +197,7 @@ fn main() -> Result<()> {
         Command::StartNode { miner } => {
             if let Some(addr) = miner {
                 if wallets::validate_address(addr.as_str()) == false {
-                    panic!("Wrong miner address!")
+                    return Err(anyhow::anyhow!("Wrong miner address!"));
                 }
                 println!("Mining is on. Address to receive rewards: {}", addr);
                 config::GLOBAL_CONFIG.set_mining_addr(addr)?;

@@ -145,7 +145,7 @@ impl Blockchain {
                 let tip_hash = self.get_tip_hash();
                 if let Some(tip_bytes) = tx.get(&tip_hash)? {
                     let tip_block = Block::deserialize(tip_bytes.as_ref())
-                        .map_err(|e| sled::transaction::ConflictableTransactionError::Abort(e))?;
+                        .map_err(sled::transaction::ConflictableTransactionError::Abort)?;
 
                     if block.get_height() > tip_block.get_height() {
                         tx.insert(TIP_BLOCK_HASH_KEY, block.get_hash())?;
@@ -193,10 +193,10 @@ impl Blockchain {
                 let txid_hex = data_encoding::HEXLOWER.encode(tx.get_id());
 
                 for (idx, out) in tx.get_vout().iter().enumerate() {
-                    if let Some(outs) = spent_utxo.get(&txid_hex) {
-                        if outs.contains(&idx) {
-                            continue 'outer;
-                        }
+                    if let Some(outs) = spent_utxo.get(&txid_hex)
+                        && outs.contains(&idx)
+                    {
+                        continue 'outer;
                     }
 
                     utxo.entry(txid_hex.clone()).or_default().push(out.clone());

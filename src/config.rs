@@ -3,7 +3,7 @@ use std::{collections::HashMap, env, sync::RwLock};
 
 use once_cell::sync::Lazy;
 
-pub static GLOBAL_CONFIG: Lazy<Config> = Lazy::new(|| Config::new());
+pub static GLOBAL_CONFIG: Lazy<Config> = Lazy::new(Config::new);
 
 pub static DEFAULT_NODE_ADDR: &str = "127.0.0.1:2001";
 
